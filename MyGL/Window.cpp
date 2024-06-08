@@ -58,12 +58,21 @@ void MyGL::Window::process_input_camera(Camera &camera, float delta_time) const
 		camera.on_keyboard(Camera::KeyboardMoveDirection::LEFT, delta_time);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.on_keyboard(Camera::KeyboardMoveDirection::RIGHT, delta_time);
+	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+		camera.on_keyboard(Camera::KeyboardMoveDirection::UP, delta_time);
+	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+		camera.on_keyboard(Camera::KeyboardMoveDirection::DOWN, delta_time);
 
 	// Mouse input
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE)
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	// TODO: Implement mouse input
+
+	// Gamepad input
+	// TODO: write a Gamepad input class
+	// TODO: deadzone for sticks
+	int axis_count;
+	const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axis_count);
+	if (axis_count >= 2)
+		camera.on_lstick(axes[0], axes[1], delta_time);
 }
 
 void MyGL::Window::setup_GLFW(int width, int height, std::string title)

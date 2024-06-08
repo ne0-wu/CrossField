@@ -20,17 +20,12 @@ namespace MyGL
 	class Camera
 	{
 	public:
-		Camera(glm::vec3 position = POSITION,
-			   glm::vec3 up = UP,
-			   float yaw = YAW,
-			   float pitch = PITCH);
-
 		glm::mat4 get_view_matrix() const;
 		glm::mat4 get_model_matrix() const;
 		glm::mat4 get_projection_matrix(float aspect_ratio) const;
 
-		void set_position(glm::vec3 position); // Set position
-		void look_at(glm::vec3 target);		   // Look at specific point
+		virtual void set_position(glm::vec3 position) {}
+		virtual void look_at(glm::vec3 target) {}
 
 		// Keyboard and mouse input
 		enum class KeyboardMoveDirection
@@ -38,34 +33,33 @@ namespace MyGL
 			FORWARD,
 			BACKWARD,
 			LEFT,
-			RIGHT
+			RIGHT,
+			UP,
+			DOWN
 		};
 		enum class MouseZoomDirection
 		{
 			IN,
 			OUT
 		};
-		void on_keyboard(KeyboardMoveDirection direction, float delta_time);
-		void on_mouse_movement(float x_offset, float y_offset,
-							   bool constrain_pitch = true);
-		void on_mouse_scroll(MouseZoomDirection zoom_direction);
+		virtual void on_keyboard(KeyboardMoveDirection direction, float delta_time) {}
+		virtual void on_mouse_movement(float x_offset, float y_offset,
+									   bool constrain_pitch = true) {}
+		virtual void on_mouse_scroll(MouseZoomDirection zoom_direction) {}
 
 		// Gamepad input
-		void on_lstick(float x, float y, float delta_time);
-		void on_rstick(float x, float y, float delta_time,
-					   bool constrain_pitch = true);
+		virtual void on_lstick(float x, float y, float delta_time) {}
+		virtual void on_rstick(float x, float y, float delta_time,
+							   bool constrain_pitch = true) {}
 
-	private:
+	protected:
 		glm::vec3 position;
-
-		glm::vec3 front;
-		glm::vec3 up;
-		glm::vec3 right;
 
 		glm::vec3 world_up;
 
-		float yaw;
-		float pitch;
+		glm::vec3 front;
+		glm::vec3 right;
+		glm::vec3 up;
 
 		float movement_speed = SPEED;
 		float mouse_sensitivity_x = MOUSE_SENSITIVITY_X;
@@ -73,6 +67,55 @@ namespace MyGL
 		float controller_sensitivity_x = CONTROLLER_SENSITIVITY_X;
 		float controller_sensitivity_y = CONTROLLER_SENSITIVITY_Y;
 		float zoom = ZOOM;
+
+		void update_camera_vectors();
+	};
+
+	class FpsCamera : public Camera
+	{
+	public:
+		FpsCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch);
+
+		void set_position(glm::vec3 position) override;
+		void look_at(glm::vec3 target) override;
+
+		// Keyboard and mouse input
+		void on_keyboard(KeyboardMoveDirection direction, float delta_time) override;
+		void on_mouse_movement(float x_offset, float y_offset,
+							   bool constrain_pitch = true) override;
+		void on_mouse_scroll(MouseZoomDirection zoom_direction) override;
+
+		// Gamepad input
+		void on_lstick(float x, float y, float delta_time) override;
+		void on_rstick(float x, float y, float delta_time,
+					   bool constrain_pitch = true) override;
+
+	protected:
+		float yaw;
+		float pitch;
+
+		void update_camera_vectors();
+	};
+
+	class OrbitCamera : public Camera
+	{
+	public:
+		OrbitCamera(glm::vec3 target, float distance = 3.0f, float theta = 0.0f, float phi = 0.0f);
+
+		void set_position(glm::vec3 position) override;
+		void look_at(glm::vec3 target) override;
+
+		// Keyboard and mouse input
+		void on_keyboard(KeyboardMoveDirection direction, float delta_time) override;
+
+		// Gamepad input
+		void on_lstick(float x, float y, float delta_time) override;
+
+	private:
+		glm::vec3 target;
+		float radius;
+		float theta;
+		float phi;
 
 		void update_camera_vectors();
 	};

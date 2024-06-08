@@ -1,20 +1,9 @@
 #include "Camera.h"
 
-MyGL::Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
-	: position(position), world_up(up), yaw(yaw), pitch(pitch)
-{
-	update_camera_vectors();
-}
+#include <iostream>
 
-void MyGL::Camera::update_camera_vectors()
-{
-	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	front.y = sin(glm::radians(pitch));
-	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-	right = glm::normalize(glm::cross(front, world_up));
-	up = glm::normalize(glm::cross(right, front));
-}
+// Base camera class
+// =================
 
 glm::mat4 MyGL::Camera::get_model_matrix() const
 {
@@ -31,12 +20,22 @@ glm::mat4 MyGL::Camera::get_projection_matrix(float aspect_ratio) const
 	return glm::perspective(glm::radians(zoom), aspect_ratio, 0.1f, 100.0f);
 }
 
-void MyGL::Camera::set_position(glm::vec3 position)
+// FPS camera class
+// ================
+
+MyGL::FpsCamera::FpsCamera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
+	: yaw(yaw), pitch(pitch)
+{
+	this->position = position;
+	this->world_up = up;
+}
+
+void MyGL::FpsCamera::set_position(glm::vec3 position)
 {
 	this->position = position;
 }
 
-void MyGL::Camera::look_at(glm::vec3 target)
+void MyGL::FpsCamera::look_at(glm::vec3 target)
 {
 	front = glm::normalize(target - position);
 	yaw = glm::degrees(atan2(front.z, front.x));
@@ -46,7 +45,7 @@ void MyGL::Camera::look_at(glm::vec3 target)
 	up = glm::normalize(glm::cross(right, front));
 }
 
-void MyGL::Camera::on_keyboard(KeyboardMoveDirection direction, float delta_time)
+void MyGL::FpsCamera::on_keyboard(KeyboardMoveDirection direction, float delta_time)
 {
 	float velocity = movement_speed * delta_time;
 
@@ -67,7 +66,7 @@ void MyGL::Camera::on_keyboard(KeyboardMoveDirection direction, float delta_time
 	}
 }
 
-void MyGL::Camera::on_mouse_movement(float x_offset, float y_offset, bool constrain_pitch)
+void MyGL::FpsCamera::on_mouse_movement(float x_offset, float y_offset, bool constrain_pitch)
 {
 	x_offset *= mouse_sensitivity_x;
 	y_offset *= mouse_sensitivity_y;
@@ -86,7 +85,7 @@ void MyGL::Camera::on_mouse_movement(float x_offset, float y_offset, bool constr
 	update_camera_vectors();
 }
 
-void MyGL::Camera::on_mouse_scroll(MouseZoomDirection zoom_direction)
+void MyGL::FpsCamera::on_mouse_scroll(MouseZoomDirection zoom_direction)
 {
 	if (zoom_direction == MouseZoomDirection::IN)
 		zoom -= 0.5f;
@@ -99,7 +98,7 @@ void MyGL::Camera::on_mouse_scroll(MouseZoomDirection zoom_direction)
 		zoom = 45.0f;
 }
 
-void MyGL::Camera::on_lstick(float x, float y, float delta_time)
+void MyGL::FpsCamera::on_lstick(float x, float y, float delta_time)
 {
 	float velocity = movement_speed * delta_time;
 
@@ -107,7 +106,7 @@ void MyGL::Camera::on_lstick(float x, float y, float delta_time)
 	position += right * x * velocity;
 }
 
-void MyGL::Camera::on_rstick(float x, float y, float delta_time, bool constrain_pitch)
+void MyGL::FpsCamera::on_rstick(float x, float y, float delta_time, bool constrain_pitch)
 {
 	x *= controller_sensitivity_x;
 	y *= controller_sensitivity_y;
@@ -124,4 +123,100 @@ void MyGL::Camera::on_rstick(float x, float y, float delta_time, bool constrain_
 	}
 
 	update_camera_vectors();
+}
+
+void MyGL::FpsCamera::update_camera_vectors()
+{
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+
+	right = glm::normalize(glm::cross(front, world_up));
+	up = glm::normalize(glm::cross(right, front));
+}
+
+// Orbit camera class
+// ==================
+
+MyGL::OrbitCamera::OrbitCamera(glm::vec3 target, float distance, float theta, float phi)
+	: target(target), radius(distance), theta(theta), phi(phi)
+{
+	world_up = {0.0f, 1.0f, 0.0f};
+	update_camera_vectors();
+}
+
+void MyGL::OrbitCamera::set_position(glm::vec3 position)
+{
+	glm::vec3 direction = glm::normalize(position - target);
+	radius = glm::length(position - target);
+	theta = -glm::degrees(atan2(direction.z, direction.x));
+	phi = -glm::degrees(asin(direction.y));
+	update_camera_vectors();
+}
+
+void MyGL::OrbitCamera::look_at(glm::vec3 target)
+{
+	this->target = target;
+	update_camera_vectors();
+}
+
+void MyGL::OrbitCamera::on_keyboard(KeyboardMoveDirection direction, float delta_time)
+{
+	float velocity = movement_speed * delta_time;
+	float rad2deg = 180.0f / glm::pi<float>();
+
+	switch (direction)
+	{
+	case KeyboardMoveDirection::FORWARD:
+		radius -= velocity;
+		break;
+	case KeyboardMoveDirection::BACKWARD:
+		radius += velocity;
+		break;
+	case KeyboardMoveDirection::LEFT:
+		theta -= velocity * rad2deg * radius;
+		break;
+	case KeyboardMoveDirection::RIGHT:
+		theta += velocity * rad2deg * radius;
+		break;
+	case KeyboardMoveDirection::UP:
+		phi += velocity * rad2deg * radius;
+		break;
+	case KeyboardMoveDirection::DOWN:
+		phi -= velocity * rad2deg * radius;
+		break;
+	}
+
+	update_camera_vectors();
+}
+
+void MyGL::OrbitCamera::on_lstick(float x, float y, float delta_time)
+{
+	float velocity = movement_speed * delta_time;
+	float rad2deg = 180.0f / glm::pi<float>();
+
+	theta += x * controller_sensitivity_x * velocity * rad2deg * radius;
+	phi += y * controller_sensitivity_y * velocity * rad2deg * radius;
+
+	update_camera_vectors();
+}
+
+void MyGL::OrbitCamera::update_camera_vectors()
+{
+	if (phi > 89.0f)
+		phi = 89.0f;
+	if (phi < -89.0f)
+		phi = -89.0f;
+	if (radius < 0.1f)
+		radius = 0.1f;
+
+	position.x = glm::cos(glm::radians(phi)) * glm::cos(glm::radians(theta));
+	position.y = glm::sin(glm::radians(phi));
+	position.z = glm::cos(glm::radians(phi)) * glm::sin(glm::radians(theta));
+
+	position = target + radius * position;
+
+	front = glm::normalize(target - position);
+	right = glm::normalize(glm::cross(front, world_up));
+	up = glm::normalize(glm::cross(right, front));
 }

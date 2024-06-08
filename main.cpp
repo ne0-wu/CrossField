@@ -9,9 +9,10 @@
 
 #include <iostream>
 
-std::tuple<double, Eigen::Vector3d> calc_incircle(const Eigen::Vector3d &A,
-												  const Eigen::Vector3d &B,
-												  const Eigen::Vector3d &C)
+std::tuple<double, Eigen::Vector3d>
+incircle(const Eigen::Vector3d &A,
+		 const Eigen::Vector3d &B,
+		 const Eigen::Vector3d &C)
 {
 	// Compute the lengths of the sides of the triangle
 	double a = (B - C).norm();
@@ -42,7 +43,7 @@ int main()
 	Mesh mesh;
 	try
 	{
-		OpenMesh::IO::read_mesh(mesh, "data/models/cathead.obj");
+		OpenMesh::IO::read_mesh(mesh, "data/models/camelhead.obj");
 	}
 	catch (const std::exception &e)
 	{
@@ -64,15 +65,16 @@ int main()
 
 	// Create line segments for visualization
 	OpenMesh::FProp<Eigen::Vector3d> incircle_center(mesh);
-	double min_radius = std::numeric_limits<double>::max();
+	double mean_radius = 0;
 	for (const auto &f : mesh.faces())
 	{
-		auto [radius, center] = calc_incircle(mesh.point(f.halfedge().from()),
-											  mesh.point(f.halfedge().to()),
-											  mesh.point(f.halfedge().next().to()));
-		min_radius = std::min(min_radius, radius);
+		auto [radius, center] = incircle(mesh.point(f.halfedge().from()),
+										 mesh.point(f.halfedge().to()),
+										 mesh.point(f.halfedge().next().to()));
+		mean_radius += radius;
 		incircle_center[f] = center;
 	}
+	mean_radius /= mesh.n_faces();
 
 	std::vector<glm::vec3> ls_vertices;
 	std::vector<GLuint> ls_indices;
@@ -85,7 +87,7 @@ int main()
 										incircle_center[f].z()};
 		for (int i = 0; i < 4; ++i)
 		{
-			auto to_vertex = incircle_center[f] + min_radius * cross_field_vectors[f.idx()][i];
+			auto to_vertex = incircle_center[f] + 0.5f * mean_radius * cross_field_vectors[f.idx()][i];
 			ls_vertices[5 * f.idx() + i + 1] = {to_vertex.x(),
 												to_vertex.y(),
 												to_vertex.z()};
@@ -98,7 +100,7 @@ int main()
 	// =========
 
 	// Initialize window (and OpenGL context)
-	MyGL::Window window(1280, 720, "Test");
+	MyGL::Window window(1500, 1500, "Cross Field Visualization");
 	float last_frame_time = 0.0f;
 	float delta_time = 0.0f;
 
@@ -141,10 +143,10 @@ int main()
 	}
 
 	// Set up camera
-	MyGL::Camera camera;
-	camera.set_position({0.0f, 0.0f, 3.0f});
+	MyGL::OrbitCamera camera(center);
+	camera.set_position({0.0f, 0.0f, 1.0f});
 
-	glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// Main loop
 	while (!window.should_close())
