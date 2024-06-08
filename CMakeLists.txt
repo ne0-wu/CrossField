@@ -13,33 +13,21 @@ find_package(glm CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
-
 add_compile_definitions(_USE_MATH_DEFINES)
+
+add_subdirectory(MyGL)
 
 add_executable(CrossField
 	main.cpp
 	Mesh.h
 	CrossField.h
 	CrossField.cpp
-	MyGL/Window.h
-	MyGL/Window.cpp
-	MyGL/Shader.h
-	MyGL/Shader.cpp
-	MyGL/Mesh.h
-	MyGL/Mesh.cpp
-	MyGL/LineSegment.h
-	MyGL/LineSegment.cpp
-	MyGL/Camera.h
-	MyGL/Camera.cpp
 )
 
 target_link_libraries(CrossField
 	OpenMeshCore
 	OpenMeshTools
-	glad::glad
-	glm::glm
-	glfw
-	imgui::imgui
+	MyGL
 )
 
 add_custom_command(TARGET CrossField POST_BUILD
