@@ -192,6 +192,10 @@ void MyGL::OrbitCamera::on_keyboard(KeyboardMoveDirection direction, float delta
 
 void MyGL::OrbitCamera::on_lstick(float x, float y, float delta_time)
 {
+	// deadzone
+	if (x * x + y * y < 0.1f)
+		return;
+
 	float velocity = movement_speed * delta_time;
 	float rad2deg = 180.0f / glm::pi<float>();
 
