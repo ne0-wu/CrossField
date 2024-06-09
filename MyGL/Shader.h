@@ -41,9 +41,9 @@ namespace MyGL
 							const std::string &fragment_file_path,
 							const std::string &geometry_file_path = "");
 
-		void set_uniform(const std::string &name, bool value) const;
-		void set_uniform(const std::string &name, int value) const;
-		void set_uniform(const std::string &name, float value) const;
+		void set_uniform(const std::string &name, const bool &value) const;
+		void set_uniform(const std::string &name, const int &value) const;
+		void set_uniform(const std::string &name, const float &value) const;
 		void set_uniform(const std::string &name, const glm::vec3 &value) const;
 		void set_uniform(const std::string &name, const glm::vec4 &value) const;
 		void set_uniform(const std::string &name, const glm::mat3 &value) const;
@@ -52,6 +52,6 @@ namespace MyGL
 	private:
 		GLuint ID;
 
-		GLint ShaderProgram::get_uniform_location(const std::string &name) const;
+		GLint get_uniform_location(const std::string &name) const;
 	};
 }

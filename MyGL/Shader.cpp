@@ -8,6 +8,9 @@
 std::string MyGL::Shader::read_file_to_string(const std::string &file_path)
 {
 	std::ifstream file(file_path);
+	if (!file.is_open())
+		throw std::runtime_error("Failed to open file: " + file_path);
+
 	file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	try
 	{
@@ -131,17 +134,17 @@ GLint MyGL::ShaderProgram::get_uniform_location(const std::string &name) const
 	return location;
 }
 
-void MyGL::ShaderProgram::set_uniform(const std::string &name, bool value) const
+void MyGL::ShaderProgram::set_uniform(const std::string &name, const bool &value) const
 {
 	glUniform1i(get_uniform_location(name), value);
 }
 
-void MyGL::ShaderProgram::set_uniform(const std::string &name, int value) const
+void MyGL::ShaderProgram::set_uniform(const std::string &name, const int &value) const
 {
 	glUniform1i(get_uniform_location(name), value);
 }
 
-void MyGL::ShaderProgram::set_uniform(const std::string &name, float value) const
+void MyGL::ShaderProgram::set_uniform(const std::string &name, const float &value) const
 {
 	glUniform1f(get_uniform_location(name), value);
 }
