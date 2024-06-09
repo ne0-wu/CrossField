@@ -7,12 +7,6 @@ project(CrossField)
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(OpenMesh CONFIG REQUIRED)
 
-find_package(glad CONFIG REQUIRED)
-find_package(glm CONFIG REQUIRED)
-
-find_package(glfw3 CONFIG REQUIRED)
-find_package(imgui CONFIG REQUIRED)
-
 add_compile_definitions(_USE_MATH_DEFINES)
 
 add_subdirectory(MyGL)
